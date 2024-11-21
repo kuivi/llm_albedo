@@ -1,0 +1,27 @@
+#!/bin/bash
+ 
+#SBATCH --account=<account>          # Your account
+#SBATCH --time=0:30:00
+#SBATCH -p gpu
+#SBATCH --ntasks=1
+#SBATCH --gpus=a100:1                 # allocate 2 (out of 4) A100 GPUs; to get 2 (out of 2) A40 GPUs use --gpus=a40:2
+#SBATCH --hint=nomultithread
+#SBATCH --job-name=gpu
+#SBATCH --output=out_%x.%j
+#SBATCH --mem=120G  # Request 120 GB of CPU RAM
+
+# disable hyperthreading
+##SBATCH --hint=nomultithread
+source  .venv/bin/activate
+
+module load cuda
+
+## Uncomment the following line to enlarge the stacksize if needed,
+##  e.g., if your code crashes with a spurious segmentation fault.
+# ulimit -s unlimited
+ 
+# To be on the safe side, we emphasize that it is pure MPI, no OpenMP threads
+#export OMP_NUM_THREADS=1
+srun python -m uvicorn llama_service_api:app --host 0.0.0.0 --port 8000
+#srun uvicorn llama_service_api:app --host 0.0.0.0 --port 8000
+
